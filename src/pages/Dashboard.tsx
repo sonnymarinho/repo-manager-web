@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { FiGithub } from 'react-icons/fi';
 import { HiOutlineLogout, HiOutlineSun } from 'react-icons/hi';
@@ -22,8 +22,6 @@ const Dashboard: React.FC = () => {
   const history = useHistory();
   const location = useLocation<{ user: IAuthor }>();
 
-  const userInfo = location.state.user;
-
   const [addRepositoryInputEnable, setAddRepositoryInputEnable] = useState(
     false,
   );
@@ -33,10 +31,32 @@ const Dashboard: React.FC = () => {
   );
   const [repositories, setRepositories] = useState([] as Repository[]);
 
+  const [userInfo, setUserInfo] = useState({} as IAuthor);
+
   const [getPullRequestsQuery, getPullRequestsState] = useLazyQuery(
     DICTIONARY_QUERY.GET_PULL_REQUESTS_REPOSITORY,
   );
 
+  useEffect(() => {
+    const fetch = async () => {
+      const locationUserExists = location.state.user;
+
+      if (locationUserExists) {
+        setUserInfo(locationUserExists);
+        return;
+      }
+
+      const { data } = await client.query({
+        query: DICTIONARY_QUERY.GET_USER_INFO,
+      });
+
+      const fetchedUser = data.viewer;
+
+      setUserInfo(fetchedUser);
+    };
+
+    fetch();
+  }, []);
   const pullRequests = useMemo(() => {
     const data = getPullRequestsState.data?.viewer?.repository?.pullRequests;
 
