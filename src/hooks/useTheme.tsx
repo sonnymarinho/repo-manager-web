@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 
-import { STORAGE_KEY, THEME } from '../../config/constants';
-import { getInitialTheme } from '../../utils/theme';
+import { STORAGE_KEY, THEME } from '../config/constants';
+import { getInitialTheme } from '../utils/theme';
 
-import { ThemeContext } from './themeContext';
+interface ThemeContextData {
+  theme: THEME;
+  changeThemeTo: (themePreference: THEME) => void;
+}
 
-export const ThemeProvider: React.FC = ({ children }) => {
+const ThemeContext = createContext({} as ThemeContextData);
+
+const ThemeProvider: React.FC = ({ children }) => {
   const [theme, setTheme] = useState(getInitialTheme());
 
   const changeThemeTo = (themeParam: THEME): void => {
@@ -33,3 +38,5 @@ export const ThemeProvider: React.FC = ({ children }) => {
     </ThemeContext.Provider>
   );
 };
+
+export { ThemeProvider, ThemeContext };
