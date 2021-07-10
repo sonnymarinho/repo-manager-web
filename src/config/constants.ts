@@ -1,3 +1,4 @@
+import { Author } from '../types/Author';
 import { getStorageSignatureProp } from '../utils/storage';
 
 export enum THEME {
@@ -12,6 +13,8 @@ export const APPLICATION_NAME = 'RepoManager';
 export const STORAGE_KEY = {
   THEME: getStorageSignatureProp('color-theme'),
   TOKEN: getStorageSignatureProp('token'),
+  REPOSITORIES: (user: Author): string =>
+    `${getStorageSignatureProp('repositories')}[${user.id}]`,
 };
 
 export const ROUTES = {

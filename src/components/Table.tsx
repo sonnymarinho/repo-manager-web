@@ -7,13 +7,19 @@ import emptyState from '../assets/empty-state.svg';
 import PullRequests, { PullRequestState } from '../types/PullRequests';
 import { Author as IAuthor } from '../types/Author';
 
+import { RowSkeleton } from './Skeletons/RowSkeleton';
+
 interface TableProps {
   setInputEnabled: (enabled: boolean) => void;
   isLoading: boolean;
   pullRequests: PullRequests;
 }
 
-const Table: React.FC<TableProps> = ({ setInputEnabled, pullRequests }) => {
+const Table: React.FC<TableProps> = ({
+  setInputEnabled,
+  pullRequests,
+  isLoading,
+}) => {
   return (
     <div className="flex flex-col overflow-y-auto">
       <div className="flex-shrink-0 h-12">
@@ -31,29 +37,34 @@ const Table: React.FC<TableProps> = ({ setInputEnabled, pullRequests }) => {
         </ul>
       </div>
       <div className="overflow-y-scroll mt-3 h-full">
-        {!pullRequests.edges || !pullRequests.edges.length ? (
-          <div className="flex flex-col h-full w-3/5 mx-auto pt-20">
-            <img
-              src={emptyState}
-              alt="Empty State"
-              className="opacity-40 w-48 mx-auto"
-            />
-            <p className="text-lg text-gray-500 text-center mt-4">
-              None pull request was found to be listed. Try to select a new one
-              or add a new repository by clicking
-              <button
-                type="button"
-                className="hover:text-blue-500 cursor-pointer transition ml-1"
-                onClick={() => setInputEnabled(true)}
-              >
-                here
-              </button>
-              .
-            </p>
-          </div>
-        ) : (
-          pullRequests.edges.map(({ node: data }) => <Row pullRequest={data} />)
-        )}
+        {isLoading && Array.from({ length: 10 }, () => <RowSkeleton />)}
+
+        {!isLoading &&
+          (!pullRequests.edges || !pullRequests.edges.length ? (
+            <div className="flex flex-col h-full w-3/5 mx-auto pt-20">
+              <img
+                src={emptyState}
+                alt="Empty State"
+                className="opacity-40 w-48 mx-auto"
+              />
+              <p className="text-lg text-gray-500 text-center mt-4">
+                None pull request was found to be listed. Try to select a new
+                one or add a new repository by clicking
+                <button
+                  type="button"
+                  className="hover:text-blue-500 cursor-pointer transition ml-1"
+                  onClick={() => setInputEnabled(true)}
+                >
+                  here
+                </button>
+                .
+              </p>
+            </div>
+          ) : (
+            pullRequests.edges.map(({ node: data }) => (
+              <Row pullRequest={data} />
+            ))
+          ))}
       </div>
     </div>
   );

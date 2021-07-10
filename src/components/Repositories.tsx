@@ -32,8 +32,8 @@ const Repositories: React.FC<RepositoriesProps> = ({
   };
 
   const addAnewRepository = (repositoryName: string) => {
-    changeRepositoryHandler(repositoryName);
     addHandler(repositoryName);
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   useEffect(() => {

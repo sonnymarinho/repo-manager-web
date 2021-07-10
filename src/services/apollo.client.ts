@@ -1,10 +1,4 @@
-import {
-  ApolloClient,
-  HttpLink,
-  InMemoryCache,
-  concat,
-  ApolloLink,
-} from '@apollo/client';
+import { ApolloClient, HttpLink, InMemoryCache, concat } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
 import { getToken } from '../utils/auth';

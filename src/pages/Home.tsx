@@ -33,8 +33,6 @@ const Home: React.FC = () => {
         setToken(token);
 
         history.push(ROUTES.DASHBOARD, { user: data.viewer });
-
-        toast.success('User loaded successfully!');
       } catch (error) {
         toast.error('Invalid token');
       } finally {

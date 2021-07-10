@@ -14,9 +14,15 @@ import DICTIONARY_QUERY from '../services/apollo.dictionary.query';
 import { client } from '../services/apollo.client';
 import Repository from '../types/Repository';
 
-import { getUniqueRepositories } from '../utils/repositories';
+import {
+  getUniqueRepositories,
+  loadRepositoriesFromStorage,
+} from '../utils/repositories';
 import { Author as IAuthor } from '../types/Author';
-import { DEFAULT_LAST_PULL_REQUESTS_QUANTITY } from '../config/constants';
+import {
+  DEFAULT_LAST_PULL_REQUESTS_QUANTITY,
+  STORAGE_KEY,
+} from '../config/constants';
 
 const Dashboard: React.FC = () => {
   const history = useHistory();
@@ -37,26 +43,44 @@ const Dashboard: React.FC = () => {
     DICTIONARY_QUERY.GET_PULL_REQUESTS_REPOSITORY,
   );
 
+  const loadRepositoryPullRequests = (name: string) => {
+    getPullRequestsQuery({
+      variables: {
+        repositoryName: name,
+        lasts: DEFAULT_LAST_PULL_REQUESTS_QUANTITY,
+      },
+    });
+  };
   useEffect(() => {
-    const fetch = async () => {
+    const getInitialUserInfo = async () => {
+      let validUser = null;
       const locationUserExists = location.state.user;
 
       if (locationUserExists) {
-        setUserInfo(locationUserExists);
-        return;
+        validUser = locationUserExists;
+      } else {
+        const { data } = await client.query({
+          query: DICTIONARY_QUERY.GET_USER_INFO,
+        });
+
+        const fetchedUser = data.viewer;
+        validUser = fetchedUser;
       }
 
-      const { data } = await client.query({
-        query: DICTIONARY_QUERY.GET_USER_INFO,
-      });
+      setUserInfo(validUser);
 
-      const fetchedUser = data.viewer;
+      const storageRepositories = loadRepositoriesFromStorage(validUser);
+      setRepositories(storageRepositories);
 
-      setUserInfo(fetchedUser);
+      if (storageRepositories.length > 0) {
+        const { name } = storageRepositories[0];
+        loadRepositoryPullRequests(name);
+      }
     };
 
-    fetch();
+    getInitialUserInfo();
   }, []);
+
   const pullRequests = useMemo(() => {
     const data = getPullRequestsState.data?.viewer?.repository?.pullRequests;
 
@@ -90,12 +114,21 @@ const Dashboard: React.FC = () => {
 
         const { repository: newRepository } = data.viewer;
 
+        if (!newRepository) throw new Error('Repository was not found');
+
         const validRepositories = getUniqueRepositories(
           newRepository,
           repositories,
         );
 
         setRepositories(validRepositories);
+
+        localStorage.setItem(
+          STORAGE_KEY.REPOSITORIES(userInfo),
+          JSON.stringify(validRepositories),
+        );
+
+        loadRepositoryPullRequests(repositoryName);
 
         toast.success('Repository successfully added!');
       } catch (error) {
@@ -106,15 +139,6 @@ const Dashboard: React.FC = () => {
     };
 
     fetch();
-  };
-
-  const handleChangeRepository = (name: string) => {
-    getPullRequestsQuery({
-      variables: {
-        repositoryName: name,
-        lasts: DEFAULT_LAST_PULL_REQUESTS_QUANTITY,
-      },
-    });
   };
 
   return (
@@ -164,7 +188,7 @@ const Dashboard: React.FC = () => {
         "
         >
           <Repositories
-            changeRepositoryHandler={handleChangeRepository}
+            changeRepositoryHandler={loadRepositoryPullRequests}
             repositories={repositories}
             setInputEnabled={setAddRepositoryInputEnable}
             isInputEnabled={addRepositoryInputEnable}

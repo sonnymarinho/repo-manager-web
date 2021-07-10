@@ -4,6 +4,7 @@ const DICTIONARY_QUERY = {
   GET_USER_INFO: gql`
     query {
       viewer {
+        id
         name
         login
         email
