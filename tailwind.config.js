@@ -6,7 +6,7 @@ module.exports = {
       gridTemplateColumns: {
         'dashboard': '20rem 1fr',
         'repositories': '1fr',
-        'authors-requests': 'minmax(7rem, auto) 1fr 10rem 5rem',
+        'authors-requests': 'minmax(7rem, auto) 1fr 7rem 7rem',
       },
       gridTemplateRows: {
         'dashboard': 'auto-fit minmax(0, 1fr)',

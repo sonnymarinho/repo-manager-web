@@ -28,13 +28,10 @@ const Dashboard: React.FC = () => {
   const history = useHistory();
   const location = useLocation<{ user: IAuthor }>();
 
-  const [addRepositoryInputEnable, setAddRepositoryInputEnable] = useState(
-    false,
-  );
+  const [repositoryInputEnabled, setRepositoryInputEnabled] = useState(false);
 
-  const [isSearchingAnewRepository, setIsSearchingAnewRepository] = useState(
-    false,
-  );
+  const [isSearchingRepository, setIsSearchingRepository] = useState(false);
+
   const [repositories, setRepositories] = useState([] as Repository[]);
 
   const [userInfo, setUserInfo] = useState({} as IAuthor);
@@ -104,7 +101,7 @@ const Dashboard: React.FC = () => {
       }
 
       try {
-        setIsSearchingAnewRepository(true);
+        setIsSearchingRepository(true);
         const { data } = await client.query({
           query: DICTIONARY_QUERY.GET_VALID_REPOSITORY,
           variables: {
@@ -134,7 +131,7 @@ const Dashboard: React.FC = () => {
       } catch (error) {
         toast.error(error.message);
       } finally {
-        setIsSearchingAnewRepository(false);
+        setIsSearchingRepository(false);
       }
     };
 
@@ -190,13 +187,13 @@ const Dashboard: React.FC = () => {
           <Repositories
             changeRepositoryHandler={loadRepositoryPullRequests}
             repositories={repositories}
-            setInputEnabled={setAddRepositoryInputEnable}
-            isInputEnabled={addRepositoryInputEnable}
+            setInputEnabled={setRepositoryInputEnabled}
+            isInputEnabled={repositoryInputEnabled}
             addHandler={searchValidRepository}
-            isSearching={isSearchingAnewRepository}
+            isSearching={isSearchingRepository}
           />
           <Table
-            setInputEnabled={setAddRepositoryInputEnable}
+            setInputEnabled={setRepositoryInputEnabled}
             isLoading={getPullRequestsState.loading}
             pullRequests={pullRequests}
           />
