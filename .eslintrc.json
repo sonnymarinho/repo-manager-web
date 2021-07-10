@@ -25,6 +25,10 @@
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
   "rules": {
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "no-debugger":"off",
+    "click-events-have-key-events": "off",
     "import/no-duplicates": "off",
     "no-unused-expressions": "off",
     "react/prop-types": "off",
@@ -35,12 +39,7 @@
     "react-hooks/exhaustive-deps": "warn",
     "react/jsx-filename-extension": [1, { "extensions": [".tsx"] }],
     "import/prefer-default-export": "off",
-    "@typescript-eslint/explicit-function-return-type": [
-      "error",
-      {
-        "allowExpressions": true
-      }
-    ],
+    "@typescript-eslint/explicit-function-return-type": "off",
     "import/extensions": [
       "error",
       "ignorePackages",

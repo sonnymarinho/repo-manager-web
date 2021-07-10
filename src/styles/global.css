@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('react-toastify/dist/ReactToastify.css');
+
+body, html {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar {
+  @apply w-7;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 8px solid transparent;
+  background-clip: padding-box;
+  @apply rounded-xl;
+  @apply bg-gray-800;
+}
