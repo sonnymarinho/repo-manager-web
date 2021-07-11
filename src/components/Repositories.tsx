@@ -1,112 +1,46 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { HiOutlinePlus } from 'react-icons/hi';
+import React from 'react';
 
-import OutsideClickHandler from 'react-outside-click-handler';
-
-import { FiGitBranch, FiLoader } from 'react-icons/fi';
+import { FiGitBranch, FiPlus } from 'react-icons/fi';
 import Repository from '../types/Repository';
 
 interface RepositoriesProps {
-  setInputEnabled: (enabled: boolean) => void;
-  isInputEnabled: boolean;
-  addHandler: (name: string) => void;
-  isSearching: boolean;
+  handleClickAddRepoButton: () => void;
   repositories: Repository[];
-  changeRepositoryHandler: (name: string) => void;
+  changeRepositoryHandler: (repository: Repository) => void;
 }
 
 const Repositories: React.FC<RepositoriesProps> = ({
-  isInputEnabled,
-  setInputEnabled,
-  addHandler,
-  isSearching,
+  handleClickAddRepoButton,
   repositories,
   changeRepositoryHandler,
 }) => {
-  const [isLocalIputEnabled, setIsLocalIputEnabled] = useState(isInputEnabled);
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const toggleInput = (active: boolean): void => {
-    setInputEnabled(active);
-  };
-
-  const addAnewRepository = (repositoryName: string) => {
-    addHandler(repositoryName);
-    if (inputRef.current) inputRef.current.value = '';
-  };
-
-  useEffect(() => {
-    if (inputRef.current) {
-      const shouldClearInput = !isInputEnabled && isLocalIputEnabled;
-      const shouldSetFocus = isInputEnabled && !isLocalIputEnabled;
-
-      inputRef.current.disabled = !isInputEnabled;
-
-      if (shouldClearInput) inputRef.current.value = '';
-      if (shouldSetFocus) inputRef.current.focus();
-    }
-
-    setIsLocalIputEnabled(isInputEnabled);
-  }, [isInputEnabled]);
-
-  const onClickOutside = (): void => {
-    toggleInput(false);
-  };
-
   const handleAddRepositoryClick = (): void => {
-    toggleInput(true);
-  };
-
-  const onKeyDownHandler = (event: any) => {
-    if (event.code === 'Tab') toggleInput(false);
-
-    if (event.code === 'Enter' && inputRef.current) {
-      const repositoryName = inputRef.current.value;
-
-      addAnewRepository(repositoryName);
-    }
+    handleClickAddRepoButton();
   };
 
   return (
     <div className="flex flex-col overflow-y-auto">
-      <OutsideClickHandler onOutsideClick={() => onClickOutside()}>
-        <div className="flex-shrink-0 flex justify-between items-center relative bg-gray-800 rounded-xl h-12 shadow-xl">
-          <input
-            ref={inputRef}
-            onKeyDown={onKeyDownHandler}
-            type="text"
-            placeholder={`${isInputEnabled ? '' : 'Repositories'}`}
-            className={`border-4 bg-transparent caret-gray-400 text-gray-200
-            focus:outline-none w-full h-full rounded-xl pl-11 ${
-              isInputEnabled ? ` border-blue-500` : 'border-none'
-            }`}
-          />
+      <div className="flex-shrink-0 flex justify-between items-center relative bg-gray-800 rounded-xl h-12 shadow-xl">
+        <span className="border-4 text-gray-400 border-none ml-9">
+          Repositories
+        </span>
 
-          <button
-            onClick={() => handleAddRepositoryClick()}
-            type="button"
-            className={`absolute flex items-center justify-center h-9 w-9 cursor-pointer ${
-              isInputEnabled
-                ? 'bg-blue-500 text-gray-900 right-1 h-10 w-10'
-                : 'text-gray-500 hover:bg-blue-500 hover:text-gray-900 right-2 rounded-lg'
-            }`}
-          >
-            {isSearching ? (
-              <FiLoader size={24} className="animate-spin" />
-            ) : (
-              <HiOutlinePlus size={24} />
-            )}
-          </button>
-        </div>
-      </OutsideClickHandler>
+        <button
+          onClick={() => handleAddRepositoryClick()}
+          type="button"
+          className={`absolute flex items-center justify-center h-9 w-9
+            text-gray-500 hover:bg-blue-500 hover:text-gray-900 right-2 rounded-lg`}
+        >
+          <FiPlus size={24} />
+        </button>
+      </div>
       <div className="bg-gray-800 rounded-xl px-8 py-2 mt-3 shadow-xl h-full overflow-y-scroll">
         <ul className="text-gray-400">
-          {repositories.map(({ name, id }) => (
+          {repositories.map(repository => (
             <Item
-              key={id}
-              name={name}
-              onClick={() => changeRepositoryHandler(name)}
+              key={repository.id}
+              name={repository.name}
+              onClick={() => changeRepositoryHandler(repository)}
             />
           ))}
         </ul>

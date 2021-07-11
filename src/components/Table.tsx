@@ -1,43 +1,70 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HiOutlineClipboardCopy, HiOutlineExternalLink } from 'react-icons/hi';
-
+import { toast } from 'react-toastify';
+import { FiCopy } from 'react-icons/fi';
 import Author from './Author';
 
 import emptyState from '../assets/empty-state.svg';
-import PullRequests, { PullRequestState } from '../types/PullRequests';
+import PullRequests, {
+  PullRequest,
+  PULL_REQUEST_STATE,
+} from '../types/PullRequests';
 import { Author as IAuthor } from '../types/Author';
 
 import { RowSkeleton } from './Skeletons/RowSkeleton';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface TableProps {
-  setInputEnabled: (enabled: boolean) => void;
   isLoading: boolean;
   pullRequests: PullRequests;
+  handleShowAddNewRepoScreen: () => void;
 }
 
 const Table: React.FC<TableProps> = ({
-  setInputEnabled,
   pullRequests,
   isLoading,
+  handleShowAddNewRepoScreen,
 }) => {
+  useEffect(() => {
+    console.log('table: ', pullRequests);
+  }, [pullRequests]);
+
+  const copyAllPullRequestsHandler = () => {
+    const links = pullRequests.edges.map(({ node: { url } }) => url);
+
+    const copied = copyToClipboard(links);
+
+    if (copied) toast.info('All pull requests url are copied');
+  };
+
   return (
     <div className="flex flex-col overflow-y-auto">
-      <div className="flex-shrink-0 h-12">
+      <div className="flex-shrink-0 h-12 relative mr-6">
         <ul
           className="
               grid grid-flow-col grid-cols-authors-requests
               bg-gray-800 text-gray-500 h-full rounded-xl
-              shadow-xl
-              mr-6 px-8"
+              shadow-xl px-8 relative"
         >
           <li className="flex items-center justify-center w-56">Author</li>
           <li className="flex items-center justify-center">Title</li>
           <li className="flex items-center justify-center">Status</li>
           <li className="flex items-center justify-center">Action</li>
+          <li className="flex items-center justify-center h-full w-12 border-l-2 border-gray-700 absolute right-0">
+            <button
+              type="button"
+              title="Copy all pull requests link"
+              className="hover:bg-blue-500 hover:text-gray-900 p-2 rounded-lg"
+              onClick={() => copyAllPullRequestsHandler()}
+            >
+              <FiCopy size={16} />
+            </button>
+          </li>
         </ul>
       </div>
       <div className="overflow-y-scroll mt-3 h-full">
-        {isLoading && Array.from({ length: 10 }, () => <RowSkeleton />)}
+        {isLoading &&
+          Array.from({ length: 10 }, (_, index) => <RowSkeleton key={index} />)}
 
         {!isLoading &&
           (!pullRequests.edges || !pullRequests.edges.length ? (
@@ -53,7 +80,7 @@ const Table: React.FC<TableProps> = ({
                 <button
                   type="button"
                   className="hover:text-blue-500 cursor-pointer transition ml-1"
-                  onClick={() => setInputEnabled(true)}
+                  onClick={handleShowAddNewRepoScreen}
                 >
                   here
                 </button>
@@ -62,7 +89,7 @@ const Table: React.FC<TableProps> = ({
             </div>
           ) : (
             pullRequests.edges.map(({ node: data }) => (
-              <Row pullRequest={data} />
+              <Row key={data.id} pullRequest={data} />
             ))
           ))}
       </div>
@@ -71,22 +98,22 @@ const Table: React.FC<TableProps> = ({
 };
 
 interface StateProps {
-  type: PullRequestState;
+  type: PULL_REQUEST_STATE;
 }
 
 const State: React.FC<StateProps> = ({ type }) => {
   switch (type) {
-    case PullRequestState.OPEN:
+    case PULL_REQUEST_STATE.OPEN:
       return (
         <span className="bg-green-400 text-gray-900 rounded-md px-2">OPEN</span>
       );
 
-    case PullRequestState.CLOSED:
+    case PULL_REQUEST_STATE.CLOSED:
       return (
         <span className="bg-red-400 text-gray-900 rounded-md px-2">CLOSED</span>
       );
 
-    case PullRequestState.MERGED:
+    case PULL_REQUEST_STATE.MERGED:
       return (
         <span className="bg-purple-400 text-gray-900 rounded-md px-2">
           MERGED
@@ -103,16 +130,19 @@ const State: React.FC<StateProps> = ({ type }) => {
 };
 
 interface RowProps {
-  pullRequest: {
-    id: string;
-    url: string;
-    title: string;
-    state: PullRequestState;
-    author: IAuthor;
-  };
+  pullRequest: PullRequest;
 }
 
-const Row: React.FC<RowProps> = ({ pullRequest: { author, title, state } }) => {
+const Row: React.FC<RowProps> = ({
+  pullRequest: { author, title, state, url },
+}) => {
+  const handleOpenExternalLink = (link: string) => {
+    window.open(link, '_blank');
+  };
+  const handleCopyLink = (link: string) => {
+    const copied = copyToClipboard(link);
+    if (copied) toast.info('Repository link copied');
+  };
   return (
     <div className="grid grid-flow-col grid-cols-authors-requests rounded-xl bg-gray-800 text-gray-500 mb-2 shadow-xl px-8">
       <div className="p-3 min-w-min">
@@ -123,10 +153,22 @@ const Row: React.FC<RowProps> = ({ pullRequest: { author, title, state } }) => {
         <State type={state} />
       </div>
       <div className="p-3 flex items-center justify-center">
-        <button type="button" className="hover:text-gray-100 mr-2">
-          <HiOutlineClipboardCopy className="text-base" />
+        <button
+          type="button"
+          className="hover:text-gray-100 mr-2 z-50"
+          onClick={() => handleCopyLink(url)}
+        >
+          <HiOutlineClipboardCopy
+            data-tip="copied"
+            data-event="click focus"
+            className="text-base"
+          />
         </button>
-        <button type="button" className="hover:text-gray-100  mx-2">
+        <button
+          type="button"
+          className="hover:text-gray-100  mx-2"
+          onClick={() => handleOpenExternalLink(url)}
+        >
           <HiOutlineExternalLink className="text-base" />
         </button>
       </div>

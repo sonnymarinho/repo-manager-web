@@ -25,6 +25,8 @@
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
   "rules": {
+    "jsx-a11y/tab-index-no-positive":"off",
+    "eslint-disable-next-line": "off",
     "jsx-a11y/click-events-have-key-events": "off",
     "jsx-a11y/no-noninteractive-element-interactions": "off",
     "no-debugger":"off",

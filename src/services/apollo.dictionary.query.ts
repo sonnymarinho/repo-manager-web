@@ -13,23 +13,25 @@ const DICTIONARY_QUERY = {
     }
   `,
   GET_PULL_REQUESTS_REPOSITORY: gql`
-    query getRepository($repositoryName: String!, $lasts: Int!) {
-      viewer {
-        repository(name: $repositoryName) {
-          pullRequests(last: $lasts) {
-            edges {
-              node {
-                id
-                url
-                title
-                state
-                author {
-                  login
-                  avatarUrl
-                  ... on User {
-                    name
-                    email
-                  }
+    query getRepository(
+      $repositoryName: String!
+      $owner: String!
+      $lasts: Int!
+    ) {
+      repository(name: $repositoryName, owner: $owner) {
+        pullRequests(last: $lasts) {
+          edges {
+            node {
+              id
+              url
+              title
+              state
+              author {
+                login
+                avatarUrl
+                ... on User {
+                  name
+                  email
                 }
               }
             }
@@ -39,12 +41,11 @@ const DICTIONARY_QUERY = {
     }
   `,
   GET_VALID_REPOSITORY: gql`
-    query getRepository($repositoryName: String!) {
-      viewer {
-        repository(name: $repositoryName) {
-          id
-          name
-        }
+    query getValidRepository($repositoryName: String!, $owner: String!) {
+      repository(name: $repositoryName, owner: $owner) {
+        id
+        name
+        nameWithOwner
       }
     }
   `,

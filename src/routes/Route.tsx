@@ -7,12 +7,12 @@ import {
 
 import { getToken } from '../utils/auth';
 
-interface RoutePorps extends ReactDOMProps {
+interface RouteProps extends ReactDOMProps {
   isPrivate?: boolean;
   component: React.ComponentType;
 }
 
-const Route: React.FC<RoutePorps> = ({
+const Route: React.FC<RouteProps> = ({
   isPrivate = false,
   component: Component,
   ...rest
