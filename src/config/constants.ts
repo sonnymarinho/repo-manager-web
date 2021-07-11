@@ -22,4 +22,4 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
 };
 
-export const DEFAULT_LAST_PULL_REQUESTS_QUANTITY = 50;
+export const DEFAULT_PULL_REQUESTS_QUANTITY = 50;

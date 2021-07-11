@@ -6,6 +6,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { useLazyQuery } from '@apollo/client';
 import { toast } from 'react-toastify';
 import { useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Author from '../components/Author';
 import Table from '../components/Table';
 import Repositories from '../components/Repositories';
@@ -20,34 +21,66 @@ import {
 } from '../utils/repositories';
 import { Author as IAuthor } from '../types/Author';
 import {
-  DEFAULT_LAST_PULL_REQUESTS_QUANTITY,
+  DEFAULT_PULL_REQUESTS_QUANTITY,
   STORAGE_KEY,
 } from '../config/constants';
+import AddRepositoryModal from '../components/AddRepositoyModal';
+import PullRequests, {
+  PullRequest,
+  PULL_REQUEST_ORDER,
+} from '../types/PullRequests';
+import PrRepository from '../types/PrRepository';
 
 const Dashboard: React.FC = () => {
   const history = useHistory();
   const location = useLocation<{ user: IAuthor }>();
 
-  const [repositoryInputEnabled, setRepositoryInputEnabled] = useState(false);
-
-  const [isSearchingRepository, setIsSearchingRepository] = useState(false);
-
-  const [repositories, setRepositories] = useState([] as Repository[]);
-
+  const [isAddRepoModalVisible, setIsAddRepoModalVisible] = useState(false);
+  const [prRespositories, setPrRepositories] = useState([] as PrRepository[]);
+  const [isSearchingANewRepo, setIsSearchingANewRepo] = useState(false);
+  const [isSearchingPullRequests, setIsSearchingPullRequests] = useState(false);
   const [userInfo, setUserInfo] = useState({} as IAuthor);
+  const [pullRequests, setPullRequests] = useState({} as PullRequests);
 
-  const [getPullRequestsQuery, getPullRequestsState] = useLazyQuery(
-    DICTIONARY_QUERY.GET_PULL_REQUESTS_REPOSITORY,
-  );
+  const loadRepositoryPullRequests = (
+    repository: Repository,
+    order: PULL_REQUEST_ORDER = PULL_REQUEST_ORDER.LAST,
+    quantity = DEFAULT_PULL_REQUESTS_QUANTITY,
+  ) => {
+    const loadPullRequests = async () => {
+      const [owner, repositoryName] = repository.nameWithOwner.split('/');
 
-  const loadRepositoryPullRequests = (name: string) => {
-    getPullRequestsQuery({
-      variables: {
-        repositoryName: name,
-        lasts: DEFAULT_LAST_PULL_REQUESTS_QUANTITY,
-      },
-    });
+      try {
+        setIsSearchingPullRequests(true);
+        const { data } = await client.query<{
+          repository: { pullRequests: PullRequests };
+        }>({
+          query: DICTIONARY_QUERY.GET_PULL_REQUESTS_REPOSITORY,
+          variables: {
+            owner,
+            repositoryName,
+            lasts: quantity,
+          },
+        });
+
+        const fetchedPullRequests = data.repository.pullRequests;
+
+        if (!fetchedPullRequests) {
+          toast.info('Repository has no pull requests');
+          return;
+        }
+
+        setPullRequests(fetchedPullRequests);
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setIsSearchingPullRequests(false);
+      }
+    };
+
+    loadPullRequests();
   };
+
   useEffect(() => {
     const getInitialUserInfo = async () => {
       let validUser = null;
@@ -60,39 +93,53 @@ const Dashboard: React.FC = () => {
           query: DICTIONARY_QUERY.GET_USER_INFO,
         });
 
-        const fetchedUser = data.viewer;
+        const fetchedUser = data.data;
         validUser = fetchedUser;
       }
 
       setUserInfo(validUser);
 
       const storageRepositories = loadRepositoriesFromStorage(validUser);
-      setRepositories(storageRepositories);
+      setPrRepositories(storageRepositories);
 
       if (storageRepositories.length > 0) {
-        const { name } = storageRepositories[0];
-        loadRepositoryPullRequests(name);
+        const storageRepository = storageRepositories[0];
+        loadRepositoryPullRequests(storageRepository);
       }
     };
 
     getInitialUserInfo();
   }, []);
 
-  const pullRequests = useMemo(() => {
-    const data = getPullRequestsState.data?.viewer?.repository?.pullRequests;
-
-    return data || [];
-  }, [getPullRequestsState.data]);
-
   const handleSignOut = (): void => {
     clearToken();
     history.push('/');
   };
 
-  const searchValidRepository = (repositoryName: string): void => {
+  const addNewRepository = (newFullStateRepository: PrRepository) => {
+    const validRepositories = getUniqueRepositories(
+      newFullStateRepository,
+      prRespositories,
+    );
+
+    setPrRepositories(validRepositories);
+
+    localStorage.setItem(
+      STORAGE_KEY.REPOSITORIES(userInfo),
+      JSON.stringify(validRepositories),
+    );
+
+    const { pullRequests: requests, ...repository } = newFullStateRepository;
+
+    loadRepositoryPullRequests(repository, requests.order, requests.quantity);
+
+    toast.success('Repository successfully added!');
+  };
+
+  const searchValidRepository = (prRepository: PrRepository): void => {
     const fetch = async () => {
-      const alreadyExists = repositories.find(
-        ({ name }) => name === repositoryName,
+      const alreadyExists = prRespositories.find(
+        ({ name }) => name === prRepository.name,
       );
 
       if (alreadyExists) {
@@ -100,38 +147,33 @@ const Dashboard: React.FC = () => {
         return;
       }
 
+      const [owner, repositoryName] = prRepository.nameWithOwner.split('/');
+
       try {
-        setIsSearchingRepository(true);
+        setIsSearchingANewRepo(true);
         const { data } = await client.query({
           query: DICTIONARY_QUERY.GET_VALID_REPOSITORY,
           variables: {
             repositoryName,
+            owner,
           },
         });
 
-        const { repository: newRepository } = data.viewer;
+        const fetchedRepository = data.repository;
 
-        if (!newRepository) throw new Error('Repository was not found');
+        if (!fetchedRepository) throw new Error('Repository was not found');
 
-        const validRepositories = getUniqueRepositories(
-          newRepository,
-          repositories,
-        );
+        const newFullStateRepository = {
+          ...prRepository,
+          ...fetchedRepository,
+        };
 
-        setRepositories(validRepositories);
-
-        localStorage.setItem(
-          STORAGE_KEY.REPOSITORIES(userInfo),
-          JSON.stringify(validRepositories),
-        );
-
-        loadRepositoryPullRequests(repositoryName);
-
-        toast.success('Repository successfully added!');
+        addNewRepository(newFullStateRepository);
       } catch (error) {
         toast.error(error.message);
       } finally {
-        setIsSearchingRepository(false);
+        setIsSearchingANewRepo(false);
+        setIsAddRepoModalVisible(false);
       }
     };
 
@@ -186,19 +228,26 @@ const Dashboard: React.FC = () => {
         >
           <Repositories
             changeRepositoryHandler={loadRepositoryPullRequests}
-            repositories={repositories}
-            setInputEnabled={setRepositoryInputEnabled}
-            isInputEnabled={repositoryInputEnabled}
-            addHandler={searchValidRepository}
-            isSearching={isSearchingRepository}
+            repositories={prRespositories}
+            handleClickAddRepoButton={() => setIsAddRepoModalVisible(true)}
           />
           <Table
-            setInputEnabled={setRepositoryInputEnabled}
-            isLoading={getPullRequestsState.loading}
+            handleShowAddNewRepoScreen={() => setIsAddRepoModalVisible(true)}
+            isLoading={isSearchingPullRequests}
             pullRequests={pullRequests}
           />
         </main>
       </div>
+      <AnimatePresence>
+        {isAddRepoModalVisible && (
+          <AddRepositoryModal
+            userInfo={userInfo}
+            addNewRepositoryHandler={searchValidRepository}
+            setIsOpen={setIsAddRepoModalVisible}
+            isLoading={isSearchingANewRepo}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

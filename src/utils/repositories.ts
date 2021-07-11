@@ -1,25 +1,25 @@
 import { STORAGE_KEY } from '../config/constants';
 import { Author } from '../types/Author';
-import Repository from '../types/Repository';
+import PrRepository from '../types/PrRepository';
 
 export const getUniqueRepositories = (
-  newRepository: Repository,
-  repositories: Repository[],
-): Repository[] => {
+  newRepository: PrRepository,
+  repositories: PrRepository[],
+): PrRepository[] => {
   const alreadyExists = repositories.find(({ id }) => newRepository.id === id);
 
   return alreadyExists ? repositories : [...repositories, newRepository];
 };
 
-export const loadRepositoriesFromStorage = (user: Author): Repository[] => {
+export const loadRepositoriesFromStorage = (user: Author): PrRepository[] => {
   const repositoriesInStorage = localStorage.getItem(
     STORAGE_KEY.REPOSITORIES(user),
   );
 
   if (repositoriesInStorage) {
     const parsedRepositories = JSON.parse(repositoriesInStorage);
-    return parsedRepositories as Repository[];
+    return parsedRepositories as PrRepository[];
   }
 
-  return [] as Repository[];
+  return [] as PrRepository[];
 };

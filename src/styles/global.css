@@ -18,3 +18,8 @@ body, html {
   @apply rounded-xl;
   @apply bg-gray-800;
 }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}

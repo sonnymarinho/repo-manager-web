@@ -1,33 +1,33 @@
 import React, { useEffect } from 'react';
 import { HiOutlineClipboardCopy, HiOutlineExternalLink } from 'react-icons/hi';
-import { motion, useAnimation } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { FiCopy } from 'react-icons/fi';
 import Author from './Author';
 
 import emptyState from '../assets/empty-state.svg';
-import PullRequests, { PullRequestState } from '../types/PullRequests';
+import PullRequests, {
+  PullRequest,
+  PULL_REQUEST_STATE,
+} from '../types/PullRequests';
 import { Author as IAuthor } from '../types/Author';
 
 import { RowSkeleton } from './Skeletons/RowSkeleton';
 import { copyToClipboard } from '../utils/clipboard';
 
 interface TableProps {
-  setInputEnabled: (enabled: boolean) => void;
   isLoading: boolean;
   pullRequests: PullRequests;
+  handleShowAddNewRepoScreen: () => void;
 }
 
 const Table: React.FC<TableProps> = ({
-  setInputEnabled,
   pullRequests,
   isLoading,
+  handleShowAddNewRepoScreen,
 }) => {
-  const controls = useAnimation();
-
   useEffect(() => {
-    if (!isLoading) controls.start('visible');
-  }, [isLoading]);
+    console.log('table: ', pullRequests);
+  }, [pullRequests]);
 
   const copyAllPullRequestsHandler = () => {
     const links = pullRequests.edges.map(({ node: { url } }) => url);
@@ -80,7 +80,7 @@ const Table: React.FC<TableProps> = ({
                 <button
                   type="button"
                   className="hover:text-blue-500 cursor-pointer transition ml-1"
-                  onClick={() => setInputEnabled(true)}
+                  onClick={handleShowAddNewRepoScreen}
                 >
                   here
                 </button>
@@ -89,14 +89,7 @@ const Table: React.FC<TableProps> = ({
             </div>
           ) : (
             pullRequests.edges.map(({ node: data }) => (
-              <motion.div
-                key={data.id}
-                initial="hidden"
-                animate={controls}
-                variants={{}}
-              >
-                <Row pullRequest={data} />
-              </motion.div>
+              <Row key={data.id} pullRequest={data} />
             ))
           ))}
       </div>
@@ -105,22 +98,22 @@ const Table: React.FC<TableProps> = ({
 };
 
 interface StateProps {
-  type: PullRequestState;
+  type: PULL_REQUEST_STATE;
 }
 
 const State: React.FC<StateProps> = ({ type }) => {
   switch (type) {
-    case PullRequestState.OPEN:
+    case PULL_REQUEST_STATE.OPEN:
       return (
         <span className="bg-green-400 text-gray-900 rounded-md px-2">OPEN</span>
       );
 
-    case PullRequestState.CLOSED:
+    case PULL_REQUEST_STATE.CLOSED:
       return (
         <span className="bg-red-400 text-gray-900 rounded-md px-2">CLOSED</span>
       );
 
-    case PullRequestState.MERGED:
+    case PULL_REQUEST_STATE.MERGED:
       return (
         <span className="bg-purple-400 text-gray-900 rounded-md px-2">
           MERGED
@@ -137,13 +130,7 @@ const State: React.FC<StateProps> = ({ type }) => {
 };
 
 interface RowProps {
-  pullRequest: {
-    id: string;
-    url: string;
-    title: string;
-    state: PullRequestState;
-    author: IAuthor;
-  };
+  pullRequest: PullRequest;
 }
 
 const Row: React.FC<RowProps> = ({
