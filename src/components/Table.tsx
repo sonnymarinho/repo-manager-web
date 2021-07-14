@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HiOutlineClipboardCopy, HiOutlineExternalLink } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import { FiCopy } from 'react-icons/fi';
@@ -9,10 +9,8 @@ import PullRequests, {
   PullRequest,
   PULL_REQUEST_STATE,
 } from '../types/PullRequests';
-import { Author as IAuthor } from '../types/Author';
 
 import { RowSkeleton } from './Skeletons/RowSkeleton';
-import { copyToClipboard } from '../utils/clipboard';
 
 interface TableProps {
   isLoading: boolean;
@@ -25,16 +23,17 @@ const Table: React.FC<TableProps> = ({
   isLoading,
   handleShowAddNewRepoScreen,
 }) => {
-  useEffect(() => {
-    console.log('table: ', pullRequests);
-  }, [pullRequests]);
-
-  const copyAllPullRequestsHandler = () => {
+  const copyAllPullRequestsHandler = async () => {
     const links = pullRequests.edges.map(({ node: { url } }) => url);
 
-    const copied = copyToClipboard(links);
+    try {
+      const parsedLinks = links.join('\n');
 
-    if (copied) toast.info('All pull requests url are copied');
+      await navigator.clipboard.writeText(parsedLinks);
+      toast.info('All pull requests url are copied');
+    } catch (err) {
+      toast.error('Error at copy repositories link');
+    }
   };
 
   return (
@@ -139,9 +138,13 @@ const Row: React.FC<RowProps> = ({
   const handleOpenExternalLink = (link: string) => {
     window.open(link, '_blank');
   };
-  const handleCopyLink = (link: string) => {
-    const copied = copyToClipboard(link);
-    if (copied) toast.info('Repository link copied');
+  const handleCopyLink = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.info('Repository link copied');
+    } catch (err) {
+      toast.error('Error at copy repository link');
+    }
   };
   return (
     <div className="grid grid-flow-col grid-cols-authors-requests rounded-xl bg-gray-800 text-gray-500 mb-2 shadow-xl px-8">
