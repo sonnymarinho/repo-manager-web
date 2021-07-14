@@ -25,10 +25,7 @@ import {
   STORAGE_KEY,
 } from '../config/constants';
 import AddRepositoryModal from '../components/AddRepositoyModal';
-import PullRequests, {
-  PullRequest,
-  PULL_REQUEST_ORDER,
-} from '../types/PullRequests';
+import PullRequests, { PULL_REQUEST_ORDER } from '../types/PullRequests';
 import PrRepository from '../types/PrRepository';
 
 const Dashboard: React.FC = () => {
@@ -89,11 +86,11 @@ const Dashboard: React.FC = () => {
       if (locationUserExists) {
         validUser = locationUserExists;
       } else {
-        const { data } = await client.query({
+        const { data } = await client.query<{ viewer: IAuthor }>({
           query: DICTIONARY_QUERY.GET_USER_INFO,
         });
 
-        const fetchedUser = data.data;
+        const fetchedUser = data.viewer;
         validUser = fetchedUser;
       }
 
@@ -180,6 +177,8 @@ const Dashboard: React.FC = () => {
     fetch();
   };
 
+  console.log('userInfo: ', userInfo);
+
   return (
     <div
       className="
@@ -195,7 +194,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center w-full max-w-xs">
-            <Author data={userInfo} />
+            {userInfo && <Author data={userInfo} />}
             <button
               type="button"
               onClick={() => handleSignOut()}
