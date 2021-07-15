@@ -148,10 +148,12 @@ const Row: React.FC<RowProps> = ({
   };
   return (
     <div className="grid grid-flow-col grid-cols-authors-requests rounded-xl bg-gray-800 text-gray-500 mb-2 shadow-xl px-8">
-      <div className="p-3 min-w-min">
+      <div className="flex items-center justify-center p-3 min-w-min">
         <Author data={author} />
       </div>
-      <div className="p-3 flex items-center justify-start">{title}</div>
+      <div className="p-3 flex items-center justify-start overflow-ellipsis overflow-hidden w-full">
+        {title}
+      </div>
       <div className="p-3 flex items-center justify-center">
         <State type={state} />
       </div>

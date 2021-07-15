@@ -1,12 +1,12 @@
 import React from 'react';
 
 import { FiGitBranch, FiPlus } from 'react-icons/fi';
-import Repository from '../types/Repository';
+import PrRepository from '../types/PrRepository';
 
 interface RepositoriesProps {
   handleClickAddRepoButton: () => void;
-  repositories: Repository[];
-  changeRepositoryHandler: (repository: Repository) => void;
+  repositories: PrRepository[];
+  changeRepositoryHandler: (repository: PrRepository) => void;
 }
 
 const Repositories: React.FC<RepositoriesProps> = ({

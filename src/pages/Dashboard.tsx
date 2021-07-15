@@ -28,6 +28,15 @@ import AddRepositoryModal from '../components/AddRepositoyModal';
 import PullRequests, { PULL_REQUEST_ORDER } from '../types/PullRequests';
 import PrRepository from '../types/PrRepository';
 
+type PullRequestsType = { repository: { pullRequests: PullRequests } };
+type AuthorType = { viewer: IAuthor };
+type PRVariableType = {
+  first?: number;
+  last?: number;
+  owner: string;
+  repositoryName: string;
+};
+
 const Dashboard: React.FC = () => {
   const history = useHistory();
   const location = useLocation<{ user: IAuthor }>();
@@ -38,26 +47,24 @@ const Dashboard: React.FC = () => {
   const [isSearchingPullRequests, setIsSearchingPullRequests] = useState(false);
   const [userInfo, setUserInfo] = useState({} as IAuthor);
   const [pullRequests, setPullRequests] = useState({} as PullRequests);
+  const [currentPrRepository, setCurrentPrRepository] =
+    useState<PrRepository>();
 
-  const loadRepositoryPullRequests = (
-    repository: Repository,
-    order: PULL_REQUEST_ORDER = PULL_REQUEST_ORDER.LAST,
-    quantity = DEFAULT_PULL_REQUESTS_QUANTITY,
-  ) => {
+  const loadRepositoryPullRequests = ({
+    nameWithOwner,
+    pullRequests: { order, quantity },
+  }: PrRepository) => {
     const loadPullRequests = async () => {
-      const [owner, repositoryName] = repository.nameWithOwner.split('/');
+      const [owner, repositoryName] = nameWithOwner.split('/');
 
       try {
         setIsSearchingPullRequests(true);
-        const { data } = await client.query<{
-          repository: { pullRequests: PullRequests };
-        }>({
+        const variables = { owner, repositoryName } as PRVariableType;
+        variables[order] = quantity;
+
+        const { data } = await client.query<PullRequestsType>({
           query: DICTIONARY_QUERY.GET_PULL_REQUESTS_REPOSITORY,
-          variables: {
-            owner,
-            repositoryName,
-            lasts: quantity,
-          },
+          variables,
         });
 
         const fetchedPullRequests = data.repository.pullRequests;
@@ -78,36 +85,6 @@ const Dashboard: React.FC = () => {
     loadPullRequests();
   };
 
-  useEffect(() => {
-    const getInitialUserInfo = async () => {
-      let validUser = null;
-      const locationUserExists = location.state.user;
-
-      if (locationUserExists) {
-        validUser = locationUserExists;
-      } else {
-        const { data } = await client.query<{ viewer: IAuthor }>({
-          query: DICTIONARY_QUERY.GET_USER_INFO,
-        });
-
-        const fetchedUser = data.viewer;
-        validUser = fetchedUser;
-      }
-
-      setUserInfo(validUser);
-
-      const storageRepositories = loadRepositoriesFromStorage(validUser);
-      setPrRepositories(storageRepositories);
-
-      if (storageRepositories.length > 0) {
-        const storageRepository = storageRepositories[0];
-        loadRepositoryPullRequests(storageRepository);
-      }
-    };
-
-    getInitialUserInfo();
-  }, []);
-
   const handleSignOut = (): void => {
     clearToken();
     history.push('/');
@@ -126,10 +103,7 @@ const Dashboard: React.FC = () => {
       JSON.stringify(validRepositories),
     );
 
-    const { pullRequests: requests, ...repository } = newFullStateRepository;
-
-    loadRepositoryPullRequests(repository, requests.order, requests.quantity);
-
+    setCurrentPrRepository(newFullStateRepository);
     toast.success('Repository successfully added!');
   };
 
@@ -177,7 +151,39 @@ const Dashboard: React.FC = () => {
     fetch();
   };
 
-  console.log('userInfo: ', userInfo);
+  useEffect(() => {
+    const getInitialUserInfo = async () => {
+      let validUser = null;
+      const locationUserExists = location.state.user;
+
+      if (locationUserExists) {
+        validUser = locationUserExists;
+      } else {
+        const { data } = await client.query<AuthorType>({
+          query: DICTIONARY_QUERY.GET_USER_INFO,
+        });
+
+        const fetchedUser = data.viewer;
+        validUser = fetchedUser;
+      }
+
+      setUserInfo(validUser);
+
+      const storageRepositories = loadRepositoriesFromStorage(validUser);
+      setPrRepositories(storageRepositories);
+
+      if (storageRepositories.length > 0) {
+        const storageRepository = storageRepositories[0];
+        setCurrentPrRepository(storageRepository);
+      }
+    };
+
+    getInitialUserInfo();
+  }, []);
+
+  useEffect(() => {
+    if (currentPrRepository) loadRepositoryPullRequests(currentPrRepository);
+  }, [currentPrRepository]);
 
   return (
     <div
@@ -226,7 +232,7 @@ const Dashboard: React.FC = () => {
         "
         >
           <Repositories
-            changeRepositoryHandler={loadRepositoryPullRequests}
+            changeRepositoryHandler={setCurrentPrRepository}
             repositories={prRespositories}
             handleClickAddRepoButton={() => setIsAddRepoModalVisible(true)}
           />
