@@ -16,10 +16,11 @@ const DICTIONARY_QUERY = {
     query getRepository(
       $repositoryName: String!
       $owner: String!
-      $lasts: Int!
+      $last: Int
+      $first: Int
     ) {
       repository(name: $repositoryName, owner: $owner) {
-        pullRequests(last: $lasts) {
+        pullRequests(last: $last, first: $first) {
           edges {
             node {
               id

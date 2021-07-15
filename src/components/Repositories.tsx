@@ -1,18 +1,20 @@
 import React from 'react';
 
 import { FiGitBranch, FiPlus } from 'react-icons/fi';
-import Repository from '../types/Repository';
+import PrRepository from '../types/PrRepository';
 
 interface RepositoriesProps {
   handleClickAddRepoButton: () => void;
-  repositories: Repository[];
-  changeRepositoryHandler: (repository: Repository) => void;
+  repositories: PrRepository[];
+  changeRepositoryHandler: (repository: PrRepository) => void;
+  currentRepository?: PrRepository;
 }
 
 const Repositories: React.FC<RepositoriesProps> = ({
   handleClickAddRepoButton,
   repositories,
   changeRepositoryHandler,
+  currentRepository,
 }) => {
   const handleAddRepositoryClick = (): void => {
     handleClickAddRepoButton();
@@ -34,13 +36,14 @@ const Repositories: React.FC<RepositoriesProps> = ({
           <FiPlus size={24} />
         </button>
       </div>
-      <div className="bg-gray-800 rounded-xl px-8 py-2 mt-3 shadow-xl h-full overflow-y-scroll">
-        <ul className="text-gray-400">
+      <div className="bg-gray-800 rounded-xl pl-8 px-2 py-2 mt-3 shadow-xl h-full overflow-y-scroll">
+        <ul className="text-gray-400 pt-3 w-full">
           {repositories.map(repository => (
             <Item
               key={repository.id}
               name={repository.name}
               onClick={() => changeRepositoryHandler(repository)}
+              active={currentRepository?.id === repository.id}
             />
           ))}
         </ul>
@@ -52,14 +55,17 @@ const Repositories: React.FC<RepositoriesProps> = ({
 interface ItemProps {
   name: string;
   onClick: () => void;
+  active?: boolean;
 }
 
-const Item: React.FC<ItemProps> = ({ name, onClick }) => {
+const Item: React.FC<ItemProps> = ({ name, onClick, active }) => {
   return (
     <li
-      className="flex h-10 items-center text-sm cursor-pointer
-      transform transition
-    hover:text-gray-200 hover:font-bold hover:translate-x-3"
+      className={`
+      flex h-10 items-center text-sm cursor-pointer transform transition
+      mr-4 pl-3 rounded-lg border-2 border-transparent
+    hover:bg-gray-600 hover:text-gray-200
+    ${active ? 'bg-gray-600 text-gray-200 ' : ''}`}
       onClick={onClick}
     >
       <FiGitBranch />

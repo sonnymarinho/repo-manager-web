@@ -15,6 +15,8 @@ export const STORAGE_KEY = {
   TOKEN: getStorageSignatureProp('token'),
   REPOSITORIES: (user: Author): string =>
     `${getStorageSignatureProp('repositories')}[${user.id}]`,
+  LAST_REPOSITORY: (user: Author): string =>
+    `${getStorageSignatureProp('last-repository')}[${user.id}]`,
 };
 
 export const ROUTES = {

@@ -74,14 +74,14 @@ const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
           animate={{ top: '9rem' }}
           exit={{ top: -100 }}
           className="absolute w-full max-w-2xl max-h-36 top-36 bg-gray-800
-      flex justify-evenly rounded-lg text-gray-500 py-3 shadow-xl pb-5"
+          flex justify-evenly rounded-lg text-gray-500 py-3 shadow-xl pb-5"
         >
           <label htmlFor="repository-name">
             Repository Name
             <div
               className="flex
-            items-center mt-3
-          bg-gray-600 rounded-lg px-5 h-9"
+              items-center mt-3
+              bg-gray-600 rounded-lg px-5 h-9"
             >
               <input
                 {...register('repository.owner')}
@@ -99,6 +99,7 @@ const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
                 type="text"
                 className="focus:outline-none bg-transparent text-gray-50 h-full w-36"
                 id="repository-name"
+                required
               />
             </div>
           </label>
@@ -106,8 +107,8 @@ const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
             Quantity
             <div
               className="flex
-            items-center mt-3
-          bg-gray-600 rounded-lg px-3 h-9"
+              items-center mt-3
+              bg-gray-600 rounded-lg px-3 h-9"
             >
               <div className="w-20 h-full text-gray-50 bg-gray-600">
                 <select
@@ -142,7 +143,7 @@ const AddRepositoryModal: React.FC<AddRepositoryModalProps> = ({
           <button
             type="submit"
             className="flex items-center justify-center h-9 w-9 rounded-xl self-end
-        bg-blue-500 text-gray-900"
+            bg-blue-500 text-gray-900"
           >
             {isLoading ? (
               <FiLoader size={16} className="animate-spin" />
