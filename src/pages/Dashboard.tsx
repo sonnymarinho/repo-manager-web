@@ -3,9 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { FiGithub } from 'react-icons/fi';
 import { HiOutlineLogout, HiOutlineSun } from 'react-icons/hi';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useLazyQuery } from '@apollo/client';
 import { toast } from 'react-toastify';
-import { useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Author from '../components/Author';
 import Table from '../components/Table';
@@ -13,19 +11,12 @@ import Repositories from '../components/Repositories';
 import { clearToken } from '../utils/auth';
 import DICTIONARY_QUERY from '../services/apollo.dictionary.query';
 import { client } from '../services/apollo.client';
-import Repository from '../types/Repository';
 
-import {
-  getUniqueRepositories,
-  loadRepositoriesFromStorage,
-} from '../utils/repositories';
+import repository from '../utils/repositories';
 import { Author as IAuthor } from '../types/Author';
-import {
-  DEFAULT_PULL_REQUESTS_QUANTITY,
-  STORAGE_KEY,
-} from '../config/constants';
+import { STORAGE_KEY } from '../config/constants';
 import AddRepositoryModal from '../components/AddRepositoyModal';
-import PullRequests, { PULL_REQUEST_ORDER } from '../types/PullRequests';
+import PullRequests from '../types/PullRequests';
 import PrRepository from '../types/PrRepository';
 
 type PullRequestsType = { repository: { pullRequests: PullRequests } };
@@ -49,6 +40,15 @@ const Dashboard: React.FC = () => {
   const [pullRequests, setPullRequests] = useState({} as PullRequests);
   const [currentPrRepository, setCurrentPrRepository] =
     useState<PrRepository>();
+
+  const changeCurrentRepository = (prRepository: PrRepository) => {
+    setCurrentPrRepository(prRepository);
+
+    localStorage.setItem(
+      STORAGE_KEY.LAST_REPOSITORY(userInfo),
+      JSON.stringify(prRepository),
+    );
+  };
 
   const loadRepositoryPullRequests = ({
     nameWithOwner,
@@ -91,7 +91,7 @@ const Dashboard: React.FC = () => {
   };
 
   const addNewRepository = (newFullStateRepository: PrRepository) => {
-    const validRepositories = getUniqueRepositories(
+    const validRepositories = repository.unique(
       newFullStateRepository,
       prRespositories,
     );
@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
       JSON.stringify(validRepositories),
     );
 
-    setCurrentPrRepository(newFullStateRepository);
+    changeCurrentRepository(newFullStateRepository);
     toast.success('Repository successfully added!');
   };
 
@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const getInitialUserInfo = async () => {
       let validUser = null;
-      const locationUserExists = location.state.user;
+      const locationUserExists = location?.state?.user;
 
       if (locationUserExists) {
         validUser = locationUserExists;
@@ -169,13 +169,12 @@ const Dashboard: React.FC = () => {
 
       setUserInfo(validUser);
 
-      const storageRepositories = loadRepositoriesFromStorage(validUser);
+      const storageRepositories = repository.loadFromStorage(validUser);
       setPrRepositories(storageRepositories);
 
-      if (storageRepositories.length > 0) {
-        const storageRepository = storageRepositories[0];
-        setCurrentPrRepository(storageRepository);
-      }
+      const lastRepository = repository.loadLastFromStorage(validUser);
+
+      if (lastRepository) changeCurrentRepository(lastRepository);
     };
 
     getInitialUserInfo();
@@ -232,7 +231,8 @@ const Dashboard: React.FC = () => {
         "
         >
           <Repositories
-            changeRepositoryHandler={setCurrentPrRepository}
+            changeRepositoryHandler={changeCurrentRepository}
+            currentRepository={currentPrRepository}
             repositories={prRespositories}
             handleClickAddRepoButton={() => setIsAddRepoModalVisible(true)}
           />

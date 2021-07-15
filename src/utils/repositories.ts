@@ -23,3 +23,27 @@ export const loadRepositoriesFromStorage = (user: Author): PrRepository[] => {
 
   return [] as PrRepository[];
 };
+
+export const getLastRepositoryFromStorage = (
+  user: Author,
+): PrRepository | undefined => {
+  const lastRepositoryInStorage = localStorage.getItem(
+    STORAGE_KEY.LAST_REPOSITORY(user),
+  );
+
+  if (lastRepositoryInStorage) {
+    const parsedPrRepository = JSON.parse(lastRepositoryInStorage);
+    return parsedPrRepository as PrRepository;
+  }
+
+  return undefined;
+};
+
+const repository = {
+  loadFromStorage: (user: Author) => loadRepositoriesFromStorage(user),
+  unique: (newRepository: PrRepository, repositories: PrRepository[]) =>
+    getUniqueRepositories(newRepository, repositories),
+  loadLastFromStorage: (user: Author) => getLastRepositoryFromStorage(user),
+};
+
+export default repository;
